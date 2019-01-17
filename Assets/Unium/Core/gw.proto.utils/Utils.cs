@@ -3,6 +3,7 @@
 //#define GW_LOGGING
 
 using System;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -39,7 +40,7 @@ namespace gw.proto.utils
             UnityEngine.Debug.LogError( string.Format( "[{0:HH:mm:ss.ffff}] {1}", DateTime.Now, string.Format( msg, args ) ) );
         }
 
-        public static string GetIPAddress()
+        public static string DetectPublicIPAddress()
         {
             if( NetworkInterface.GetIsNetworkAvailable() == false )
             {
@@ -52,6 +53,31 @@ namespace gw.proto.utils
                 .LastOrDefault() // seems to be the convention :o
                 .ToString()
             ;
+        }
+
+        public static NameValueCollection ParseQueryString( string query )
+        {
+            var bag = new NameValueCollection();
+
+            if( string.IsNullOrEmpty( query ) )
+            {
+                return bag;
+            }
+
+            var parameterDelimiters = new char[] { '?', '&' };
+            var keyValueDelimiters  = new char[] { '=' };
+
+            var parameters = query.Split( parameterDelimiters, StringSplitOptions.RemoveEmptyEntries );
+
+            foreach( var param in parameters )
+            {
+                var keyValue = param.Split( keyValueDelimiters, StringSplitOptions.None );
+                var value    = keyValue.Length >= 2 ? keyValue[ 1 ] : "";
+
+                bag.Add( UnityEngine.WWW.UnEscapeURL( keyValue[ 0 ] ), UnityEngine.WWW.UnEscapeURL( value ) );
+            }
+
+            return bag;
         }
     }
 }
