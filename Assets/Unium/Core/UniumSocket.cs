@@ -262,20 +262,7 @@ namespace gw.unium
 
         void Send( string id, string msg, string data )
         {
-            var sb = new StringBuilder();
-
-            sb.Append( "{" );
-
-            if( String.IsNullOrEmpty( id ) == false )
-            {
-                sb.AppendFormat( @"""id"":{0},", JsonTypeConverters.EscapedString( id ) );
-            }
-
-            sb.AppendFormat( @"""{0}"":{1}", msg, data );
-
-            sb.Append( "}" );
-
-            mSocket.SendAsync( sb.ToString() );
+            mSocket.SendAsync( JsonFormatter.ResponseMessage(id, msg, data) );
         }
     }
 }

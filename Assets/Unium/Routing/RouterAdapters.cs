@@ -3,6 +3,9 @@
 using System;
 using gw.proto.http;
 using UnityEngine;
+using Amazon.Runtime;
+using Amazon.SQS;
+using gw.proto.utils;
 
 namespace gw.unium
 {
@@ -105,5 +108,50 @@ namespace gw.unium
         public string   Data                                    { get { return mResult; } }
     }
 
-#endif
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // socket adapter
+
+    public class RequestAdapterSQS : RequestAdapter
+    {
+        private SQSMessage mMessage;
+        private AmazonSQSClient mSQSClient;
+        private string mOutboudQueue; 
+
+        public RequestAdapterSQS(SQSMessage msg, AmazonSQSClient sqsClient, string outboundQueue)
+        {
+            mMessage = msg;
+            mSQSClient = sqsClient;
+            mOutboudQueue = outboundQueue;
+        }
+
+        public string ID { get { return mMessage.id; } }
+        public bool Rejected { get; private set; }
+
+
+        public override String Path { get { return mMessage.q; } }
+        public override byte[] Body { get { return null; } }
+
+        public override void SetContentType(string mimetype) { }
+
+        public override void Reject(ResponseCode code) { Error(code); Rejected = true; }
+        public override void Redirect(string url) { Error(ResponseCode.MovedPermanently); Rejected = true; }
+        public override void Respond(string data) { Reply(data); }
+        public override void Respond(byte[] data) { throw new NotImplementedException(); } // binary data
+
+        private void Reply(string data) { SendImpl(ID, "data", string.IsNullOrEmpty(data) ? "null" : data); }
+        private void Reply(object data) { SendImpl(ID, "data", JsonReflector.Reflect(data)); }
+        public void Info(string msg) { SendImpl(ID, "info", JsonTypeConverters.EscapedString(msg)); }
+        public void Error(ResponseCode code) { SendImpl(ID, "error", JsonTypeConverters.EscapedString(HttpUtils.CodeToString(code))); }
+
+        private void SendImpl(string id, string msg, string data) {
+            mSQSClient.SendMessageAsync(mOutboudQueue, JsonFormatter.ResponseMessage(id, msg, data),
+                (result) => {
+                    if (result.Exception != null) {
+                        Debug.LogException(result.Exception);
+                    }            
+                });        
+        }
     }
+
+#endif
+}

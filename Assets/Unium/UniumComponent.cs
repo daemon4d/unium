@@ -12,7 +12,6 @@ using gw.proto.http;
 using gw.proto.utils;
 using gw.unium;
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // UniumComponent
 
@@ -26,7 +25,7 @@ public class UniumComponent : MonoBehaviour
     public bool     EnableDebug     = false;
     public bool     AutoStart       = true;
     public string   StaticFiles     = null;
-
+    
     public enum AddressStrategy
     {
         AllInterfaces,
@@ -48,7 +47,6 @@ public class UniumComponent : MonoBehaviour
     List< GameThreadRequest >   mQueuedRequests = new List<GameThreadRequest>();
     List< UniumSocket >         mSockets        = new List<UniumSocket>();
     Server                      mServer         = null;
-
 
     //----------------------------------------------------------------------------------------------------
 
@@ -95,7 +93,6 @@ public class UniumComponent : MonoBehaviour
             StartServer();
         }
     }
-
 
     //----------------------------------------------------------------------------------------------------
 
